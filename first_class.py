@@ -2,6 +2,8 @@ def genetate_ints(N):
     for i in range(N):
         yield i
 
+def fuc1():
+	pass
 
 # @html_tag("h1")
 # def do_some():
