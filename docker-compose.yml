@@ -1,0 +1,23 @@
+services:
+  flask:
+    build: .
+    ports:
+      - 5678:5000
+    volumes:
+      - ./:/app
+
+  mysqldb:
+    image: mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=xiaoniu@jam
+    volumes:
+      - mysql_data:/var/lib/mysql
+  
+volumes:
+    mysql_data:
+
+    
+
+    
