@@ -15,6 +15,7 @@ def fuc1():
 
 if __name__ == "__main__":
     a,b,c,d = genetate_ints(4)
+	#
     print(a,b,c,d)
 
 
