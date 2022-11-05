@@ -85,7 +85,7 @@ def getVideoUrl(videoId):
 
 
 if __name__ == '__main__':
-    URL ="7.17 eBG:/ 复制打开抖音，看看【黑袍的作品】周六保证不休息，周日休息不保证，违法吗？# 内容过于... https://v.douyin.com/6GmdLd5/"
+    URL ="9.74 DHi:/ # 影视剪辑 # 铭记历史勿忘国耻 # 怀旧经典影视 # 再忆经典 历史总是惊人的相似 https://v.douyin.com/Mch8qSq/ 复制此链接，打开Dou音搜索，直接观看视频！"
     real_url = expToUrl(URL)
     print(real_url)
     videoId =  __getVid(real_url)
