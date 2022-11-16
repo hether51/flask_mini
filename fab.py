@@ -85,7 +85,7 @@ def getVideoUrl(videoId):
 
 
 if __name__ == '__main__':
-    URL ="4.12 ndN:/ 被封的第七天 白天大喇叭通报 晚上四面八方的株洲-加油～# 希望疫情早点结束恢复正常生活 # 疫情下的城市  https://v.douyin.com/rLfhFPn/ 复制此链接，打开Dou音搜索，直接观看视频！"
+    URL ="3.38 xSL:/ 关于社区人员转卖捐赠防疫慰问物资事件。# 抖来普法2022 # 株洲疫情 # 免职  https://v.douyin.com/rj8MmBY/ 复制此链接，打开Dou音搜索，直接观看视频！"
     real_url = expToUrl(URL)
     print(real_url)
     videoId =  __getVid(real_url)

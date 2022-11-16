@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField,FileAllowed,FileRequired
 from flask_login import current_user
-from wtforms import StringField,PasswordField,SubmitField,BooleanField,EmailField
+from wtforms import StringField,PasswordField,SubmitField,BooleanField,EmailField,TextAreaField
 from wtforms.validators import DataRequired,Length,Email,EqualTo,ValidationError
 from flaskblog.models import User
 
@@ -44,3 +44,8 @@ class UpdateAccountForm(FlaskForm):
             mail = User.query.filter_by(email=email.data).first()
             if mail:
                 raise ValidationError('email is taken.Please choose another one!')
+            
+class PostForm(FlaskForm):
+    title = StringField('标题',validators=[DataRequired()])
+    content = TextAreaField('正文',validators=[Length(max=1000)])
+    submit = SubmitField('提交')

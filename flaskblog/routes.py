@@ -1,34 +1,17 @@
 import os,secrets
-from flask import render_template,url_for,flash,redirect,request
+from PIL import Image
+from flask import render_template,url_for,flash,redirect,request,abort
 from flaskblog import app,db,bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm
-from flaskblog.models import User
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm,PostForm
+from flaskblog.models import User,Post
 from flask_login import login_user,current_user,logout_user,login_required,login_manager
 
-
-
-
-
-
-posts = [
-    {
-        'author': 'jam',
-        'title': 'blog post1',
-        'content': 'First post content',
-        'date_posted': 'October 1,2022'
-    },
-    {
-        'author': 'hether',
-        'title': 'Blog post2',
-        'content': 'Second post content',
-        'date_posted': 'october 2,2022'
-    }
-]
 
 
 @app.route("/")
 @app.route("/home")
 def home():
+    posts = Post.query.all()
     return render_template('home.html',posts=posts,title='20221013')
 
 @app.route("/about")
@@ -75,7 +58,12 @@ def save_picture(form_pic):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_pic.filename)
     pic_fn = random_hex + f_ext
-    form_pic.save(os.path.join(app.root_path,'static/profile_pics',pic_fn))
+    pic_path = os.path.join(app.root_path,'static/profile_pics',pic_fn)
+    
+    output_size = (125,125)
+    i = Image.open(form_pic)
+    i.thumbnail(output_size)
+    i.save(pic_path)
     return pic_fn
 
 
@@ -85,14 +73,12 @@ def account():
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
-            pictur_file = save_picture(form.picture.data)
-            current_user.image_file = pictur_file
+            current_user.image_file = save_picture(form.picture.data)
         if current_user.username != form.username.data and current_user.email != form.email.data:
             current_user.username = form.username.data
             current_user.email = form.email.data
         db.session.commit()
-        tip = str(app.root_path)
-        flash(f'账号已更新，{tip}下次记得用新账号登录','success')
+        flash(f'账号已更新，下次记得用新账号登录','success')
         image_file = url_for('static',filename='profile_pics/'+current_user.image_file)        
         return render_template('account.html',title='账号',
                                image_file=image_file,form=form )
@@ -103,8 +89,53 @@ def account():
     return render_template('account.html',title='记录',
                            image_file=image_file,form=form )
     
+@app.route("/post/new",methods=['GET','POST'])
+@login_required
+def new_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(title=form.title.data,content=form.content.data,user_id=current_user.id)
+        db.session.add(post)
+        db.session.commit()
+        flash('帖子已经更新','success')
+        return redirect(url_for('home'))
+    return render_template('create_post.html',title='New Post',form=form,legend='新文章')
 
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    post = Post.query.get_or_404(post_id,"输入的flask页面错误缺失")
+    return render_template('post.html',title=post.title,post=post)
 
+@app.route("/post/<int:post_id>/update",methods=['GET','POST'])
+@login_required
+def update_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.author != current_user :
+        abort(403)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
+        db.session.commit()
+        flash('文章已经更新','success')
+        return redirect(url_for('post',post_id=post.id))
+    elif request.method == 'GET':
+        form.title.data = post.title
+        form.content.data = post.content
+    return render_template('create_post.html',title='Update Post',
+                            form=form,legend='更新post')
+
+@app.route('/delete_post/<int:post_id>/delete',methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.author != current_user:
+        abort(403)
+    
+    db.session.delete(post)
+    db.session.commit()
+    flash('已经成功删除文章','success')
+    return redirect(url_for('home'))
 
 
 # @app.route("/widgets")
