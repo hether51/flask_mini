@@ -49,3 +49,19 @@ class PostForm(FlaskForm):
     title = StringField('标题',validators=[DataRequired()])
     content = TextAreaField('正文',validators=[Length(max=1000)])
     submit = SubmitField('提交')
+
+class RequestResetForm(FlaskForm):
+    email = EmailField('邮箱',validators=[Email(),DataRequired()])
+    submit = SubmitField('重置密码提交')
+    def validate_email(self,email):
+        if email.raw_data is not None :
+            mail = User.query.filter_by(email=email.data).first()
+            if mail is None:
+                raise ValidationError('此邮箱没有注册，请填入用户注册的邮箱')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('密码',validators=[DataRequired()])
+    confirm_password = PasswordField('确认密码',validators=[DataRequired(),EqualTo('password')])
+    submit = SubmitField('修改密码')
+
+

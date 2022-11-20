@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json,time
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_mail import Mail
 #import mysql.connector
 
 # after import app in console , add the context: app.app_context().push()
@@ -17,6 +18,27 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 login_manager.login_message = u"您没有登录，请输入账号密码："
 login_manager.login_message_category = "info"
+
+# app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+# app.config['MAIL_PORT'] = '587'
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USERNAME'] = 'woojamwtj@gmail.com'
+# app.config['MAIL_PASSWORD'] = 'vdixhotvnbeajlgg'
+
+# app.config['MAIL_SERVER'] = 'smtp.qq.com'
+# app.config['MAIL_PORT'] = '587'
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USERNAME'] = '27138217@qq.com'
+# app.config['MAIL_PASSWORD'] = 'kucvmljzhqgybjgb'
+
+app.config['MAIL_SERVER'] = 'smtp.sina.com'
+app.config['MAIL_PORT'] = '587'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'woojam@sina.com'
+app.config['MAIL_PASSWORD'] = 'b882e04e8a1e4744'
+
+mail = Mail(app)
+
 
 from flaskblog import routes
 

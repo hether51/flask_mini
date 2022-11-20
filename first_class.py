@@ -1,22 +1,20 @@
-def genetate_ints(N):
-    for i in range(N):
-        yield i
+import json
+from flaskblog import app,db
+from flaskblog.models import Post
 
-def fuc1():
-	pass
+app.app_context().push()
 
-# @html_tag("h1")
-# def do_some():
-#     return
+f = open('posts.json')
+data = json.load(f)
 
-# def just_func():
-#     print("in exec()")
-#     return
-
-if __name__ == "__main__":
-    a,b,c,d = genetate_ints(4)
-	#
-    print(a,b,c,d)
+for p1 in data:
+    post = Post(title=p1['title'],content=p1['content'],user_id=p1['user_id'])
+    db.session.add(post)
+db.session.commit()
 
 
-    # print(just_func())
+t1 = Post.query.all()
+print(t1)
+
+
+

@@ -1,17 +1,20 @@
 import os,secrets
 from PIL import Image
 from flask import render_template,url_for,flash,redirect,request,abort
-from flaskblog import app,db,bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm,PostForm
+from flaskblog import app,db,bcrypt,mail
+from flaskblog.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
+                            PostForm,RequestResetForm,ResetPasswordForm)
 from flaskblog.models import User,Post
-from flask_login import login_user,current_user,logout_user,login_required,login_manager
+from flask_login import login_user,current_user,logout_user,login_required
+from flask_mail import Message
 
 
 
 @app.route("/")
 @app.route("/home")
 def home():
-    posts = Post.query.all()
+    page = request.args.get('page',1,type=int)
+    posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page,per_page=5)
     return render_template('home.html',posts=posts,title='20221013')
 
 @app.route("/about")
@@ -59,6 +62,9 @@ def save_picture(form_pic):
     _, f_ext = os.path.splitext(form_pic.filename)
     pic_fn = random_hex + f_ext
     pic_path = os.path.join(app.root_path,'static/profile_pics',pic_fn)
+
+    origin_pic_path = os.path.join(app.root_path,'static/profile_pics',form_pic.filename)
+    form_pic.save(origin_pic_path)
     
     output_size = (125,125)
     i = Image.open(form_pic)
@@ -74,7 +80,7 @@ def account():
     if form.validate_on_submit():
         if form.picture.data:
             current_user.image_file = save_picture(form.picture.data)
-        if current_user.username != form.username.data and current_user.email != form.email.data:
+        if current_user.username != form.username.data or current_user.email != form.email.data:
             current_user.username = form.username.data
             current_user.email = form.email.data
         db.session.commit()
@@ -125,6 +131,7 @@ def update_post(post_id):
     return render_template('create_post.html',title='Update Post',
                             form=form,legend='更新post')
 
+
 @app.route('/delete_post/<int:post_id>/delete',methods=['POST'])
 @login_required
 def delete_post(post_id):
@@ -136,6 +143,62 @@ def delete_post(post_id):
     db.session.commit()
     flash('已经成功删除文章','success')
     return redirect(url_for('home'))
+
+
+@app.route("/user/<string:username>")
+def user_posts(username):
+    page = request.args.get('page',1,type=int)
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(author=user)\
+        .order_by(Post.date_posted.desc())\
+            .paginate(page=page,per_page=5)
+    return render_template('user_posts.html',posts=posts,username=user.username)
+
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Password reset request',
+                    sender=app.config['MAIL_USERNAME'] ,
+                    recipients=[user.email])
+    msg.body = f'''To reset password ,click the link below:
+{url_for('reset_token',token=token,_external=True)}
+If you donot make this request,just ignore the mail.
+    '''
+    # mail.connect()
+    mail.send(msg)
+
+@app.route("/reset_password",methods=['GET','POST'])
+def reset_quest():
+    redirect(url_for('home'))
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        mail = form.email.data
+        user = User.query.filter_by(email=mail).first()
+        send_reset_email(user)
+        flash('已发送邮件，请查看后更改密码','info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html',form=form,title='更新密码')
+
+@app.route("/reset_password/<token>",methods=['GET','POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('链接已失效，请提交正确链接','warning')
+        return redirect(url_for('reset_quest'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash(f'密码已经更改: {user.email} !','success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html',user=user,form=form,title='更新密码')
+
+    
 
 
 # @app.route("/widgets")

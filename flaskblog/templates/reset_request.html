@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="post" action="">
+            {{ form.hidden_tag() }}
+            <legend>忘记密码</legend>
+            <div class="mb-3" >
+                {{ form.email.label(class="form-control-label")}}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control form-control-lg is-invalid") }}
+                    {% for error in form.email.errors %}
+                        <span> {{ error }}</span>
+                    {% endfor %}
+                {% else %}
+                    {{ form.email(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+
+            <div class="mb-3" >
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+
+        </form>
+    </div>
+    
+      
+{% endblock content %}
